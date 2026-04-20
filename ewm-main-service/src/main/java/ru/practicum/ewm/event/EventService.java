@@ -105,6 +105,9 @@ public class EventService {
         List<Long> categoryIds = categories == null ? List.of() : categories;
         LocalDateTime start = rangeStart == null ? LocalDateTime.now().minusYears(20) : rangeStart;
         LocalDateTime end = rangeEnd == null ? LocalDateTime.now().plusYears(20) : rangeEnd;
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("rangeStart must be before rangeEnd");
+        }
         List<Event> events = repository.findAdminEvents(userIds, userIds.isEmpty(), stateValues, stateValues.isEmpty(),
                         categoryIds, categoryIds.isEmpty(), start, end, PageRequest.of(page, size))
                 .getContent();
@@ -133,6 +136,12 @@ public class EventService {
         int page = from / size;
         LocalDateTime start = rangeStart == null ? LocalDateTime.now().minusYears(10) : rangeStart;
         LocalDateTime end = rangeEnd == null ? LocalDateTime.now().plusYears(10) : rangeEnd;
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("rangeStart must be before rangeEnd");
+        }
+        if (!"EVENT_DATE".equalsIgnoreCase(sort) && !"VIEWS".equalsIgnoreCase(sort)) {
+            throw new IllegalArgumentException("sort must be EVENT_DATE or VIEWS");
+        }
         List<Long> cats = categories == null ? List.of() : categories;
         String textFilter = text == null ? "" : text;
         List<Event> events = repository.findPublished(textFilter, cats, cats.isEmpty(), paid, start, end,
@@ -192,6 +201,9 @@ public class EventService {
             event.setPaid(dto.getPaid());
         }
         if (dto.getParticipantLimit() != null) {
+            if (dto.getParticipantLimit() < 0) {
+                throw new IllegalArgumentException("participantLimit must be >= 0");
+            }
             event.setParticipantLimit(dto.getParticipantLimit());
         }
         if (dto.getRequestModeration() != null) {
@@ -243,10 +255,14 @@ public class EventService {
     }
 
     private void saveHit(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        String ip = (forwardedFor == null || forwardedFor.isBlank())
+                ? request.getRemoteAddr()
+                : forwardedFor.split(",")[0].trim();
         statsClient.hit(EndpointHitDto.builder()
                 .app("ewm-main-service")
                 .uri(request.getRequestURI())
-                .ip(request.getRemoteAddr())
+                .ip(ip)
                 .timestamp(LocalDateTime.now())
                 .build());
     }
