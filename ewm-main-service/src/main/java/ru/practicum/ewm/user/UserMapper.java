@@ -19,4 +19,11 @@ public class UserMapper {
                 .name(dto.getName())
                 .build();
     }
+
+    public UserShortDto toShortDto(User user) {
+        return UserShortDto.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .build();
+    }
 }

@@ -30,9 +30,10 @@ public class AdminUserController {
     }
 
     @GetMapping
-    public List<UserDto> getAll(@RequestParam(defaultValue = "0") @Min(0) int from,
+    public List<UserDto> getAll(@RequestParam(required = false) List<Long> ids,
+                                @RequestParam(defaultValue = "0") @Min(0) int from,
                                 @RequestParam(defaultValue = "10") @Min(1) int size) {
-        return service.getAll(from, size);
+        return service.getAllByIds(ids, from, size);
     }
 
     @DeleteMapping("/{userId}")

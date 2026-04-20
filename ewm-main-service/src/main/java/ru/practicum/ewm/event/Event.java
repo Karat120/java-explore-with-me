@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Embedded;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,6 +55,12 @@ public class Event {
 
     @Column(name = "participant_limit", nullable = false)
     private int participantLimit;
+
+    @Column(name = "request_moderation", nullable = false)
+    private boolean requestModeration;
+
+    @Embedded
+    private Location location;
 
     @Column(nullable = false)
     private String title;

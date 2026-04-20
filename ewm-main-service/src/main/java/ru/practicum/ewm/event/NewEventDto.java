@@ -19,8 +19,11 @@ public class NewEventDto {
     @Future
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
+    @NotNull
+    private Location location;
     private boolean paid;
     private int participantLimit = 0;
+    private boolean requestModeration = true;
     @NotBlank
     private String title;
 }

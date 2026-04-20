@@ -14,6 +14,24 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
             SELECT e
             FROM Event e
+            WHERE (:usersEmpty = true OR e.initiator.id IN :users)
+              AND (:statesEmpty = true OR cast(e.state as string) IN :states)
+              AND (:catsEmpty = true OR e.category.id IN :categories)
+              AND e.eventDate BETWEEN :rangeStart AND :rangeEnd
+            """)
+    Page<Event> findAdminEvents(@Param("users") List<Long> users,
+                                @Param("usersEmpty") boolean usersEmpty,
+                                @Param("states") List<String> states,
+                                @Param("statesEmpty") boolean statesEmpty,
+                                @Param("categories") List<Long> categories,
+                                @Param("catsEmpty") boolean catsEmpty,
+                                @Param("rangeStart") LocalDateTime rangeStart,
+                                @Param("rangeEnd") LocalDateTime rangeEnd,
+                                Pageable pageable);
+
+    @Query("""
+            SELECT e
+            FROM Event e
             WHERE e.state = ru.practicum.ewm.event.EventState.PUBLISHED
               AND (:text IS NULL OR lower(e.annotation) LIKE lower(concat('%', :text, '%'))
                    OR lower(e.description) LIKE lower(concat('%', :text, '%')))

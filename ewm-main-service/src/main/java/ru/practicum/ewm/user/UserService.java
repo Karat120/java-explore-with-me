@@ -24,6 +24,17 @@ public class UserService {
         return repository.findAll(PageRequest.of(page, size)).stream().map(mapper::toDto).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<UserDto> getAllByIds(List<Long> ids, int from, int size) {
+        if (ids == null || ids.isEmpty()) {
+            return getAll(from, size);
+        }
+        int start = Math.min(from, ids.size());
+        int end = Math.min(from + size, ids.size());
+        List<Long> pageIds = ids.subList(start, end);
+        return repository.findByIdIn(pageIds).stream().map(mapper::toDto).toList();
+    }
+
     @Transactional
     public void delete(long userId) {
         if (!repository.existsById(userId)) {
