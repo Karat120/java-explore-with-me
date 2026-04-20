@@ -2,6 +2,8 @@ package ru.practicum.ewm.event;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
@@ -27,13 +29,13 @@ public class AdminEventController {
                                      @RequestParam(required = false) List<Long> categories,
                                      @RequestParam(required = false) @DateTimeFormat(pattern = DATE_PATTERN) LocalDateTime rangeStart,
                                      @RequestParam(required = false) @DateTimeFormat(pattern = DATE_PATTERN) LocalDateTime rangeEnd,
-                                     @RequestParam(defaultValue = "0") int from,
-                                     @RequestParam(defaultValue = "10") int size) {
+                                     @RequestParam(defaultValue = "0") @Min(0) int from,
+                                     @RequestParam(defaultValue = "10") @Min(1) int size) {
         return service.searchAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @PatchMapping("/{eventId}")
-    public EventFullDto update(@PathVariable long eventId, @RequestBody UpdateEventDto dto) {
+    public EventFullDto update(@PathVariable long eventId, @Valid @RequestBody UpdateEventDto dto) {
         return service.updateByAdmin(eventId, dto);
     }
 }

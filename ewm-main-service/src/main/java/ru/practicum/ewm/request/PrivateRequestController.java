@@ -1,5 +1,6 @@
 package ru.practicum.ewm.request;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -43,7 +44,7 @@ public class PrivateRequestController {
     @PatchMapping("/events/{eventId}/requests")
     public EventRequestStatusUpdateResult updateStatuses(@PathVariable long userId,
                                                          @PathVariable long eventId,
-                                                         @RequestBody EventRequestStatusUpdateRequest req) {
+                                                         @Valid @RequestBody EventRequestStatusUpdateRequest req) {
         return service.updateStatuses(userId, eventId, req);
     }
 }
