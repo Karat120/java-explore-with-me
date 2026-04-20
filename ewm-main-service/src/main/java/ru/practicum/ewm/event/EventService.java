@@ -27,6 +27,8 @@ import ru.practicum.stats.dto.ViewStatsDto;
 @Service
 @RequiredArgsConstructor
 public class EventService {
+    private static final long USER_HOURS_BEFORE_EVENT = 2;
+    private static final long ADMIN_HOURS_BEFORE_PUBLISH = 1;
     private final EventRepository repository;
     private final EventMapper mapper;
     private final UserService userService;
@@ -36,6 +38,7 @@ public class EventService {
 
     @Transactional
     public EventFullDto createByUser(long userId, NewEventDto dto) {
+        validateUserEventDate(dto.getEventDate());
         User initiator = userService.getByIdOrThrow(userId);
         Category category = categoryService.getByIdOrThrow(dto.getCategory());
         Event event = Event.builder()
@@ -84,6 +87,9 @@ public class EventService {
         if (event.getState() == EventState.PUBLISHED) {
             throw new ConflictException("published event cannot be updated by user");
         }
+        if (dto.getEventDate() != null) {
+            validateUserEventDate(dto.getEventDate());
+        }
         applyStateActionByUser(event, dto.getStateAction());
         patch(event, dto);
         Event saved = repository.save(event);
@@ -111,6 +117,9 @@ public class EventService {
     @Transactional
     public EventFullDto updateByAdmin(long eventId, UpdateEventDto dto) {
         Event event = getByIdOrThrow(eventId);
+        if (dto.getEventDate() != null) {
+            validateAdminEventDate(dto.getEventDate());
+        }
         applyStateActionByAdmin(event, dto.getStateAction());
         patch(event, dto);
         Event saved = repository.save(event);
@@ -197,10 +206,16 @@ public class EventService {
             return;
         }
         if (Objects.equals(stateAction, "SEND_TO_REVIEW")) {
+            if (event.getState() != EventState.PENDING && event.getState() != EventState.CANCELED) {
+                throw new ConflictException("only pending or canceled events can be changed");
+            }
             event.setState(EventState.PENDING);
             return;
         }
         if (Objects.equals(stateAction, "CANCEL_REVIEW")) {
+            if (event.getState() == EventState.PUBLISHED) {
+                throw new ConflictException("published event cannot be canceled");
+            }
             event.setState(EventState.CANCELED);
         }
     }
@@ -213,6 +228,7 @@ public class EventService {
             if (event.getState() != EventState.PENDING) {
                 throw new ConflictException("only pending event can be published");
             }
+            validateAdminEventDate(event.getEventDate());
             event.setState(EventState.PUBLISHED);
             event.setPublishedOn(LocalDateTime.now());
             return;
@@ -249,5 +265,17 @@ public class EventService {
 
     private long getConfirmedRequests(long eventId) {
         return requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+    }
+
+    private void validateUserEventDate(LocalDateTime eventDate) {
+        if (eventDate.isBefore(LocalDateTime.now().plusHours(USER_HOURS_BEFORE_EVENT))) {
+            throw new ConflictException("event date must be at least 2 hours from now");
+        }
+    }
+
+    private void validateAdminEventDate(LocalDateTime eventDate) {
+        if (eventDate.isBefore(LocalDateTime.now().plusHours(ADMIN_HOURS_BEFORE_PUBLISH))) {
+            throw new ConflictException("event date must be at least 1 hour from publication");
+        }
     }
 }

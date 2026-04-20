@@ -80,11 +80,23 @@ public class RequestService {
         if (!event.getInitiator().getId().equals(userId)) {
             throw new NotFoundException("event not found");
         }
+        if (req.getRequestIds() == null || req.getRequestIds().isEmpty()) {
+            throw new ConflictException("requestIds must not be empty");
+        }
+        if (req.getStatus() != RequestStatus.CONFIRMED && req.getStatus() != RequestStatus.REJECTED) {
+            throw new ConflictException("status must be CONFIRMED or REJECTED");
+        }
         List<ParticipationRequest> requests = repository.findAllById(req.getRequestIds());
+        if (requests.size() != req.getRequestIds().size()) {
+            throw new NotFoundException("some requests not found");
+        }
         List<ParticipationRequestDto> confirmed = new java.util.ArrayList<>();
         List<ParticipationRequestDto> rejected = new java.util.ArrayList<>();
         long confirmedCount = repository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
         for (ParticipationRequest r : requests) {
+            if (!r.getEvent().getId().equals(eventId)) {
+                throw new ConflictException("request does not belong to event");
+            }
             if (r.getStatus() != RequestStatus.PENDING) {
                 throw new ConflictException("only pending requests can be updated");
             }

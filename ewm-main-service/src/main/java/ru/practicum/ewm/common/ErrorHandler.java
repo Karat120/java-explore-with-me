@@ -1,7 +1,8 @@
 package ru.practicum.ewm.common;
 
 import jakarta.validation.ConstraintViolationException;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,19 +13,29 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ErrorHandler {
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNotFound(NotFoundException ex) {
-        return Map.of("error", ex.getMessage());
+    public ApiError handleNotFound(NotFoundException ex) {
+        return error(ex, HttpStatus.NOT_FOUND, "The required object was not found.");
     }
 
     @ExceptionHandler(ConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Map<String, String> handleConflict(ConflictException ex) {
-        return Map.of("error", ex.getMessage());
+    public ApiError handleConflict(ConflictException ex) {
+        return error(ex, HttpStatus.CONFLICT, "For the requested operation the conditions are not met.");
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleBadRequest(Exception ex) {
-        return Map.of("error", ex.getMessage());
+    public ApiError handleBadRequest(Exception ex) {
+        return error(ex, HttpStatus.BAD_REQUEST, "Incorrectly made request.");
+    }
+
+    private ApiError error(Exception ex, HttpStatus status, String reason) {
+        return ApiError.builder()
+                .errors(List.of(ex.getClass().getSimpleName()))
+                .message(ex.getMessage())
+                .reason(reason)
+                .status(status.toString())
+                .timestamp(LocalDateTime.now())
+                .build();
     }
 }
