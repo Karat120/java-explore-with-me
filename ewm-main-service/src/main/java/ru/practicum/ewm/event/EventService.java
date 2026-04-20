@@ -134,7 +134,8 @@ public class EventService {
         LocalDateTime start = rangeStart == null ? LocalDateTime.now().minusYears(10) : rangeStart;
         LocalDateTime end = rangeEnd == null ? LocalDateTime.now().plusYears(10) : rangeEnd;
         List<Long> cats = categories == null ? List.of() : categories;
-        List<Event> events = repository.findPublished(text, cats, cats.isEmpty(), paid, start, end,
+        String textFilter = text == null ? "" : text;
+        List<Event> events = repository.findPublished(textFilter, cats, cats.isEmpty(), paid, start, end,
                 PageRequest.of(page, size, Sort.by("eventDate").descending())).getContent();
         if (onlyAvailable) {
             events = events.stream()

@@ -5,6 +5,7 @@ COPY pom.xml pom.xml
 COPY stats/pom.xml stats/pom.xml
 COPY stats/stats-dto/pom.xml stats/stats-dto/pom.xml
 COPY stats/stats-client/pom.xml stats/stats-client/pom.xml
+COPY stats/stats-server/pom.xml stats/stats-server/pom.xml
 COPY ewm-main-service/pom.xml ewm-main-service/pom.xml
 
 COPY stats/stats-dto/src stats/stats-dto/src

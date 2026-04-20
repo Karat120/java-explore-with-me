@@ -4,6 +4,8 @@ import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,9 +25,21 @@ public class ErrorHandler {
         return error(ex, HttpStatus.CONFLICT, "For the requested operation the conditions are not met.");
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleIntegrity(DataIntegrityViolationException ex) {
+        return error(ex, HttpStatus.CONFLICT, "Integrity constraint has been violated.");
+    }
+
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleBadRequest(Exception ex) {
+        return error(ex, HttpStatus.BAD_REQUEST, "Incorrectly made request.");
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleUnreadable(HttpMessageNotReadableException ex) {
         return error(ex, HttpStatus.BAD_REQUEST, "Incorrectly made request.");
     }
 

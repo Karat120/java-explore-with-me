@@ -33,7 +33,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             SELECT e
             FROM Event e
             WHERE e.state = ru.practicum.ewm.event.EventState.PUBLISHED
-              AND (:text IS NULL OR lower(e.annotation) LIKE lower(concat('%', :text, '%'))
+              AND (:text = '' OR lower(e.annotation) LIKE lower(concat('%', :text, '%'))
                    OR lower(e.description) LIKE lower(concat('%', :text, '%')))
               AND (:categoriesEmpty = true OR e.category.id IN :categories)
               AND (:paid IS NULL OR e.paid = :paid)
