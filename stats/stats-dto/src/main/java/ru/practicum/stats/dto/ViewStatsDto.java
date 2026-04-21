@@ -10,7 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ViewStatsDto {
+    /** Application name that received hits. */
     private String app;
+    /** Requested URI. */
     private String uri;
+    /** Number of hits for the URI. */
     private Long hits;
 }
