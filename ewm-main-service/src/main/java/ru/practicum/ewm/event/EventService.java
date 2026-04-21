@@ -286,13 +286,13 @@ public class EventService {
 
     private void validateUserEventDate(LocalDateTime eventDate) {
         if (eventDate.isBefore(LocalDateTime.now().plusHours(USER_HOURS_BEFORE_EVENT))) {
-            throw new ConflictException("event date must be at least 2 hours from now");
+            throw new IllegalArgumentException("event date must be at least 2 hours from now");
         }
     }
 
     private void validateAdminEventDate(LocalDateTime eventDate) {
         if (eventDate.isBefore(LocalDateTime.now().plusHours(ADMIN_HOURS_BEFORE_PUBLISH))) {
-            throw new ConflictException("event date must be at least 1 hour from publication");
+            throw new IllegalArgumentException("event date must be at least 1 hour from publication");
         }
     }
 }

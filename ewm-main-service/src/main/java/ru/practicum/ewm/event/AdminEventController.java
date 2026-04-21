@@ -2,6 +2,7 @@ package ru.practicum.ewm.event;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,7 +35,7 @@ public class AdminEventController {
     }
 
     @PatchMapping("/{eventId}")
-    public EventFullDto update(@PathVariable long eventId, @RequestBody UpdateEventDto dto) {
+    public EventFullDto update(@PathVariable long eventId, @Valid @RequestBody UpdateEventDto dto) {
         return service.updateByAdmin(eventId, dto);
     }
 }

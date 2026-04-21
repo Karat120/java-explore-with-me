@@ -33,14 +33,14 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 2000)
     private String annotation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 7000)
     private String description;
 
     @Column(name = "event_date", nullable = false)
@@ -62,7 +62,7 @@ public class Event {
     @Embedded
     private Location location;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 120)
     private String title;
 
     @Column(nullable = false)
