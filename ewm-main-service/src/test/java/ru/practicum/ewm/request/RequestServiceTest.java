@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -87,5 +88,38 @@ class RequestServiceTest {
         ParticipationRequestDto created = requestService.create(1L, 2L);
 
         assertEquals(RequestStatus.CONFIRMED, created.getStatus());
+    }
+
+    @Test
+    void createShouldThrowWhenRequesterIsInitiator() {
+        User sameUser = User.builder().id(1L).email("a@a.a").name("Name").build();
+        Event event = Event.builder().id(2L).state(EventState.PUBLISHED).initiator(sameUser).build();
+
+        when(userService.getByIdOrThrow(1L)).thenReturn(sameUser);
+        when(eventService.getByIdOrThrow(2L)).thenReturn(event);
+
+        assertThrows(ConflictException.class, () -> requestService.create(1L, 2L));
+    }
+
+    @Test
+    void createShouldThrowWhenEventUnpublished() {
+        User requester = User.builder().id(1L).email("a@a.a").name("Name").build();
+        Event event = Event.builder().id(2L).state(EventState.PENDING).initiator(User.builder().id(3L).build()).build();
+
+        when(userService.getByIdOrThrow(1L)).thenReturn(requester);
+        when(eventService.getByIdOrThrow(2L)).thenReturn(event);
+
+        assertThrows(ConflictException.class, () -> requestService.create(1L, 2L));
+    }
+
+    @Test
+    void cancelShouldThrowWhenRequestDoesNotBelongToUser() {
+        ParticipationRequest request = ParticipationRequest.builder()
+                .id(10L)
+                .requester(User.builder().id(2L).build())
+                .build();
+        when(requestRepository.findById(10L)).thenReturn(Optional.of(request));
+
+        assertThrows(ru.practicum.ewm.common.NotFoundException.class, () -> requestService.cancel(1L, 10L));
     }
 }
