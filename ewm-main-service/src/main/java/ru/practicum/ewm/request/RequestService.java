@@ -1,6 +1,7 @@
 package ru.practicum.ewm.request;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -90,8 +91,9 @@ public class RequestService {
         if (requests.size() != req.getRequestIds().size()) {
             throw new NotFoundException("some requests not found");
         }
-        List<ParticipationRequestDto> confirmed = new java.util.ArrayList<>();
-        List<ParticipationRequestDto> rejected = new java.util.ArrayList<>();
+        List<ParticipationRequestDto> confirmed = new ArrayList<>();
+        List<ParticipationRequestDto> rejected = new ArrayList<>();
+        List<ParticipationRequest> toSave = new ArrayList<>();
         long confirmedCount = repository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
         for (ParticipationRequest r : requests) {
             if (!r.getEvent().getId().equals(eventId)) {
@@ -106,17 +108,26 @@ public class RequestService {
                 }
                 r.setStatus(RequestStatus.CONFIRMED);
                 confirmedCount++;
-                confirmed.add(mapper.toDto(repository.save(r)));
+                toSave.add(r);
             } else {
                 r.setStatus(RequestStatus.REJECTED);
-                rejected.add(mapper.toDto(repository.save(r)));
+                toSave.add(r);
             }
         }
         if (event.getParticipantLimit() > 0 && confirmedCount >= event.getParticipantLimit()) {
             List<ParticipationRequest> pending = repository.findByEventIdAndStatus(eventId, RequestStatus.PENDING);
             for (ParticipationRequest pendingRequest : pending) {
                 pendingRequest.setStatus(RequestStatus.REJECTED);
-                rejected.add(mapper.toDto(repository.save(pendingRequest)));
+                toSave.add(pendingRequest);
+            }
+        }
+        repository.saveAll(toSave);
+        for (ParticipationRequest saved : toSave) {
+            ParticipationRequestDto dto = mapper.toDto(saved);
+            if (saved.getStatus() == RequestStatus.CONFIRMED) {
+                confirmed.add(dto);
+            } else if (saved.getStatus() == RequestStatus.REJECTED) {
+                rejected.add(dto);
             }
         }
         return EventRequestStatusUpdateResult.builder()

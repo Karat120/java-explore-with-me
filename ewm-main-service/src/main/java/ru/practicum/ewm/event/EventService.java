@@ -3,6 +3,7 @@ package ru.practicum.ewm.event;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,9 +64,11 @@ public class EventService {
     public List<EventShortDto> getByUser(long userId, int from, int size) {
         int page = from / size;
         userService.getByIdOrThrow(userId);
-        return repository.findByInitiatorId(userId, PageRequest.of(page, size))
+        List<Event> events = repository.findByInitiatorId(userId, PageRequest.of(page, size)).getContent();
+        Map<Long, Long> confirmedRequests = getConfirmedRequestsMap(events.stream().map(Event::getId).toList());
+        return events
                 .stream()
-                .map(e -> mapper.toShortDto(e, 0L, getConfirmedRequests(e.getId())))
+                .map(e -> mapper.toShortDto(e, 0L, confirmedRequests.getOrDefault(e.getId(), 0L)))
                 .toList();
     }
 
@@ -112,8 +115,9 @@ public class EventService {
                         categoryIds, categoryIds.isEmpty(), start, end, PageRequest.of(page, size))
                 .getContent();
         Map<Long, Long> views = getViews(events.stream().map(Event::getId).toList());
+        Map<Long, Long> confirmedRequests = getConfirmedRequestsMap(events.stream().map(Event::getId).toList());
         return events.stream()
-                .map(e -> mapper.toFullDto(e, views.getOrDefault(e.getId(), 0L), getConfirmedRequests(e.getId())))
+                .map(e -> mapper.toFullDto(e, views.getOrDefault(e.getId(), 0L), confirmedRequests.getOrDefault(e.getId(), 0L)))
                 .toList();
     }
 
@@ -146,9 +150,11 @@ public class EventService {
         String textFilter = text == null ? "" : text;
         List<Event> events = repository.findPublished(textFilter, cats, cats.isEmpty(), paid, start, end,
                 PageRequest.of(page, size, Sort.by("eventDate").descending())).getContent();
+        Map<Long, Long> confirmedRequests = getConfirmedRequestsMap(events.stream().map(Event::getId).toList());
         if (onlyAvailable) {
             events = events.stream()
-                    .filter(e -> e.getParticipantLimit() == 0 || getConfirmedRequests(e.getId()) < e.getParticipantLimit())
+                    .filter(e -> e.getParticipantLimit() == 0
+                            || confirmedRequests.getOrDefault(e.getId(), 0L) < e.getParticipantLimit())
                     .toList();
         }
         Map<Long, Long> views = getViews(events.stream().map(Event::getId).toList());
@@ -161,7 +167,7 @@ public class EventService {
         }
         saveHit(request);
         return events.stream()
-                .map(e -> mapper.toShortDto(e, views.getOrDefault(e.getId(), 0L), getConfirmedRequests(e.getId())))
+                .map(e -> mapper.toShortDto(e, views.getOrDefault(e.getId(), 0L), confirmedRequests.getOrDefault(e.getId(), 0L)))
                 .toList();
     }
 
@@ -282,6 +288,17 @@ public class EventService {
 
     private long getConfirmedRequests(long eventId) {
         return requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+    }
+
+    private Map<Long, Long> getConfirmedRequestsMap(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, Long> counts = new HashMap<>();
+        for (Object[] row : requestRepository.countByEventIdsAndStatus(eventIds, RequestStatus.CONFIRMED)) {
+            counts.put((Long) row[0], (Long) row[1]);
+        }
+        return counts;
     }
 
     private void validateUserEventDate(LocalDateTime eventDate) {
