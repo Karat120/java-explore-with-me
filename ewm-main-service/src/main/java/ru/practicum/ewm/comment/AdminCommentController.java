@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequiredArgsConstructor
 public class AdminCommentController {
-    private final CommentService service;
+    private final CommentAdminService service;
 
     @GetMapping
     public List<CommentDto> getAll(@RequestParam(required = false) Long userId,

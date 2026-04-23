@@ -5,11 +5,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import ru.practicum.ewm.event.EventState;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     Page<Comment> findByAuthorIdOrderByCreatedDesc(Long authorId, Pageable pageable);
 
-    Page<Comment> findByEventIdAndEventStateOrderByCreatedAsc(Long eventId, ru.practicum.ewm.event.EventState state, Pageable pageable);
+    Page<Comment> findByEventIdAndEventStateOrderByCreatedAsc(Long eventId, EventState state, Pageable pageable);
 
     @Query("""
             select c

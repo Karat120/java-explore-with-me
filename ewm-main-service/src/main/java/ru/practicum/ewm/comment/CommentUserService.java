@@ -16,14 +16,14 @@ import ru.practicum.ewm.user.UserService;
 
 @Service
 @RequiredArgsConstructor
-public class CommentService {
+public class CommentUserService {
     private final CommentRepository repository;
     private final CommentMapper mapper;
     private final UserService userService;
     private final EventService eventService;
 
     @Transactional
-    public CommentDto create(long userId, long eventId, NewCommentDto dto) {
+    public CommentDto create(long userId, long eventId, CommentRequestDto dto) {
         User author = userService.getByIdOrThrow(userId);
         Event event = eventService.getByIdOrThrow(eventId);
         if (event.getState() != EventState.PUBLISHED) {
@@ -41,7 +41,7 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentDto updateByUser(long userId, long commentId, UpdateCommentDto dto) {
+    public CommentDto updateByUser(long userId, long commentId, CommentRequestDto dto) {
         Comment comment = getByIdOrThrow(commentId);
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new NotFoundException("comment not found");
@@ -76,25 +76,6 @@ public class CommentService {
         return repository.findByEventIdAndEventStateOrderByCreatedAsc(eventId, EventState.PUBLISHED, PageRequest.of(page, size))
                 .map(mapper::toDto)
                 .getContent();
-    }
-
-    @Transactional(readOnly = true)
-    public List<CommentDto> getAdmin(Long userId, Long eventId, int from, int size) {
-        int page = from / size;
-        return repository.findAdmin(userId, eventId, PageRequest.of(page, size))
-                .map(mapper::toDto)
-                .getContent();
-    }
-
-    @Transactional(readOnly = true)
-    public CommentDto getById(long commentId) {
-        return mapper.toDto(getByIdOrThrow(commentId));
-    }
-
-    @Transactional
-    public void deleteByAdmin(long commentId) {
-        getByIdOrThrow(commentId);
-        repository.deleteById(commentId);
     }
 
     private Comment getByIdOrThrow(long commentId) {

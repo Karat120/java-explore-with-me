@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequiredArgsConstructor
 public class PublicCommentController {
-    private final CommentService service;
+    private final CommentUserService service;
 
     @GetMapping
     public List<CommentDto> getByEvent(@PathVariable long eventId,

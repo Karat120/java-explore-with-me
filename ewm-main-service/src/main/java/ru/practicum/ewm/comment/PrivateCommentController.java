@@ -22,20 +22,20 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequiredArgsConstructor
 public class PrivateCommentController {
-    private final CommentService service;
+    private final CommentUserService service;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CommentDto create(@PathVariable long userId,
                              @RequestParam long eventId,
-                             @Valid @RequestBody NewCommentDto dto) {
+                             @Valid @RequestBody CommentRequestDto dto) {
         return service.create(userId, eventId, dto);
     }
 
     @PatchMapping("/{commentId}")
     public CommentDto update(@PathVariable long userId,
                              @PathVariable long commentId,
-                             @Valid @RequestBody UpdateCommentDto dto) {
+                             @Valid @RequestBody CommentRequestDto dto) {
         return service.updateByUser(userId, commentId, dto);
     }
 
